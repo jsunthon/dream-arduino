@@ -144,7 +144,7 @@ void setup(void)
   ble.info();
 
   Serial.println(F("Please use Adafruit Bluefruit LE app to connect in UART mode"));
-  Serial.println(F("Then Enter characters to send to Bluefruit"));
+  Serial.println(F("Preparing for transmission..."));
   Serial.println();
 
   ble.verbose(false);  // debug info is a little annoying after this point!
@@ -203,6 +203,9 @@ void loop(void)
     Serial.print("\t");
     Serial.print(String(z_val));
     Serial.print("\t");
+    Serial.print(millis());
+    Serial.print("\n");
+
 
     ble.print("AT+BLEUARTTX=");
     ble.print("\t");
@@ -213,6 +216,7 @@ void loop(void)
     ble.print(String(z_val));
     ble.print("\t");
     ble.println(millis());
+    Serial.print("\n");
 
     // check response stastus
     if (! ble.waitForOK() ) {
