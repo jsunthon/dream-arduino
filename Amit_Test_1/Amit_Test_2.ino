@@ -40,7 +40,8 @@
 /* Set the delay between fresh samples */
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 
-Adafruit_BNO055 bno = Adafruit_BNO055();
+Adafruit_BNO055 bno1 = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bno2 = Adafruit_BNO055(56, 0x29);
 /*=========================================================================
     APPLICATION SETTINGS
 
@@ -165,14 +166,24 @@ void setup(void)
   }
   
   /* Initialise the sensor */
-  if(!bno.begin())
+  if(!bno1.begin())
   {
     /* There was a problem detecting the BNO055 ... check your connections */
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     while(1);
   }
   
-    bno.setExtCrystalUse(true);
+    bno1.setExtCrystalUse(true);
+
+      /* Initialise the sensor */
+  if(!bno2.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while(1);
+  }
+  
+    bno2.setExtCrystalUse(true);
 
 }
 
@@ -184,39 +195,45 @@ void setup(void)
 void loop(void)
 {
   // Check for user input
-  char inputs[BUFSIZE + 1];
-   imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+  //char inputs[BUFSIZE + 1];
+   imu::Vector<3> euler1 = bno1.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
 
-  int x_val = euler.x();
-  int y_val = euler.y();
-  int z_val = euler.z();
+  int x1 = euler1.x();
+  int y1 = euler1.y();
+  int w1 = euler1.z();
+
+  imu::Vector<3> euler2 = bno2.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+
+  int x2 = euler2.x();
+  int y2 = euler2.y();
+  int w2 = euler2.z();
   
-  char inputsble[BUFSIZE + 1];
+  //char inputsble[BUFSIZE + 1];
 //  if ( getUserInput(inputs, BUFSIZE,inputsble) )
 //  {
     // Send characters to Bluefruit
     Serial.print("[Send] ");
     Serial.print("\t");
-    Serial.print(String(x_val));
+    Serial.print(String(x1) + "," + String(x2));
     Serial.print("\t");
-    Serial.print(String(y_val));
+    Serial.print(String(y1) + "," + String(y2));
     Serial.print("\t");
-    Serial.print(String(z_val));
+    Serial.print(String(w1) + "," + String(w2));
     Serial.print("\t");
-    Serial.print(millis());
+    //Serial.print(millis());
     Serial.print("\n");
 
 
     ble.print("AT+BLEUARTTX=");
     ble.print("\t");
-    ble.print(String(x_val));
+    ble.print(String(x1) + "," + String(x2));
     ble.print("\t");
-    ble.print(String(y_val));
+    ble.print(String(y1) + "," + String(y2));
     ble.print("\t");
-    ble.print(String(z_val));
+    ble.print(String(w1) + "," + String(w2));
     ble.print("\t");
-    ble.println(millis());
-    Serial.print("\n");
+    ble.println(" ");
+    //Serial.print("\n");
 
     // check response stastus
     if (! ble.waitForOK() ) {
