@@ -164,26 +164,26 @@ void setup(void)
     ble.sendCommandCheckOK("AT+HWModeLED=" MODE_LED_BEHAVIOUR);
     Serial.println(F("******************************"));
   }
-  
-  /* Initialise the sensor */
-  if(!bno1.begin())
-  {
-    /* There was a problem detecting the BNO055 ... check your connections */
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
-  }
-  
-    bno1.setExtCrystalUse(true);
 
-      /* Initialise the sensor */
-  if(!bno2.begin())
+  /* Initialise the sensor */
+  if (!bno1.begin())
   {
     /* There was a problem detecting the BNO055 ... check your connections */
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
+    while (1);
   }
-  
-    bno2.setExtCrystalUse(true);
+
+  bno1.setExtCrystalUse(true);
+
+  /* Initialise the sensor */
+  if (!bno2.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while (1);
+  }
+
+  bno2.setExtCrystalUse(true);
 
 }
 
@@ -194,52 +194,76 @@ void setup(void)
 /**************************************************************************/
 void loop(void)
 {
-  // Check for user input
-  //char inputs[BUFSIZE + 1];
-   imu::Vector<3> euler1 = bno1.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+  // Fetch euler values from 1st IMU
+  imu::Vector<3> euler1 = bno1.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
 
   int x1 = euler1.x();
   int y1 = euler1.y();
   int w1 = euler1.z();
 
+  // Fetch euler values from 2nd IMU
   imu::Vector<3> euler2 = bno2.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
 
   int x2 = euler2.x();
   int y2 = euler2.y();
   int w2 = euler2.z();
+
+  // Send characters to serial monitor
+  Serial.print("[Send] ");
+
+  // First IMU
+  Serial.print(String(x1));
+  Serial.print("\t");
+  Serial.print(String(y1));
+  Serial.print("\t");
+  Serial.print(String(w1));
+  //
   
-  //char inputsble[BUFSIZE + 1];
-//  if ( getUserInput(inputs, BUFSIZE,inputsble) )
-//  {
-    // Send characters to Bluefruit
-    Serial.print("[Send] ");
-    Serial.print("\t");
-    Serial.print(String(x1) + "," + String(x2));
-    Serial.print("\t");
-    Serial.print(String(y1) + "," + String(y2));
-    Serial.print("\t");
-    Serial.print(String(w1) + "," + String(w2));
-    Serial.print("\t");
-    //Serial.print(millis());
-    Serial.print("\n");
+  Serial.print("\t");
 
+  // Second IMU
+  Serial.print(String(x2));
+  Serial.print("\t");
+  Serial.print(String(y2));
+  Serial.print("\t");
+  Serial.print(String(w2));
+  Serial.print("\t");
+  //
+  
+  Serial.println(" ");
 
-    ble.print("AT+BLEUARTTX=");
-    ble.print("\t");
-    ble.print(String(x1) + "," + String(x2));
-    ble.print("\t");
-    ble.print(String(y1) + "," + String(y2));
-    ble.print("\t");
-    ble.print(String(w1) + "," + String(w2));
-    ble.print("\t");
-    ble.println(" ");
-    //Serial.print("\n");
+  // Send characters to Bluefruit
+  ble.print("AT+BLEUARTTX=");
 
-    // check response stastus
-    if (! ble.waitForOK() ) {
-      Serial.println(F("Failed to send?"));
-    }
-//  }
+  // First IMU
+  ble.print(String(x1));
+  ble.print("\t");
+  ble.print(String(y1));
+  ble.print("\t");
+  ble.print(String(w1));
+  //
+
+  ble.print("\t");
+
+  // Second IMU
+  ble.print(String(x2));
+  ble.print("\t");
+  ble.print(String(y2));
+  ble.print("\t");
+  ble.print(String(w2));
+  ble.print("\t");
+
+  // Needed for sending data
+  ble.println(" ");
+
+  // Added a delay of half a seconds to Tx
+  delay(500);
+
+  
+  // check response stastus
+  if (! ble.waitForOK() ) {
+    Serial.println(F("Failed to send?"));
+  }
 
   // Check for incoming characters from Bluefruit
   ble.println("AT+BLEUARTRX");
@@ -254,33 +278,4 @@ void loop(void)
 }
 
 /**************************************************************************/
-/*!
-    @brief  Checks for user input (via the Serial Monitor)
-*/
-/**************************************************************************/
-//bool getUserInput(char buffer[], uint8_t maxSize, char bufferble[])
-//{
-//  // timeout in 100 milliseconds
-////  TimeoutTimer timeout(100);
-////
-////  memset(buffer, 0, maxSize);
-////  while ( (!Serial.available()) && !timeout.expired() ) {
-////    delay(1);
-////  }
-////
-////  if ( timeout.expired() ) return false;
-//
-//  //  delay(2);
-//  //  uint8_t count = 0;
-//  //  do
-//  //  {
-//  //    count += Serial.readBytes(buffer + count, maxSize);
-//  //    delay(2);
-//  //  } while ( (count < maxSize) && (Serial.available()) );
-//  //*/
-//  buffer[0] = analogRead(0);
-//  bufferble[0] = buffer;
-//  
-//  return true;
-//}
 
